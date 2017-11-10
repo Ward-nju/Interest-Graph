@@ -12,6 +12,16 @@ import time
 import numpy as np
 import scipy.stats
 
+def get_aid_list():
+    '''获取实验所需的aid列表'''
+    fo = open('D:/TopicInterestGraph/data/lda/author_topic_distribution.json', 'r', encoding='utf-8')
+    aid_list = []
+    for line in fo.readlines():
+        temp = json.loads(line)
+        aid_list.append(list(temp.keys())[0])
+    fo.close()
+    return aid_list
+
 def paper_author_name_list():
     '''获得文章对应的作者信息'''
     fo = open('D:/TopicInterestGraph/data/at/paper_authorName_info.json', 'a', encoding='utf-8')
@@ -30,24 +40,11 @@ def paper_author_name_list():
     fo.close()
 
 
-def generate_doc2author(aid):
-    '''为指定作者的AT模型所需的doc2author字典'''
-    doc2author = OrderedDict()
-    paper_list = get_corpus_by_aid.get_author_paper_list(aid)
-    fo = open('D:/TopicInterestGraph/data/at/paper_authorName_info.json', 'r', encoding='utf-8')
-    paper_authors = json.loads(fo.readline())
-    fo.close()
-    i = 0
-    for paper in paper_list:
-        author_list = paper_authors[paper]
-        doc2author[i] = author_list
-        i += 1
-    return doc2author
 
 
 
 def get_corpus(aid):
-    '''获得指定aid的AT模型所需的训练数据、字典'''
+    '''获得指定aid的LDA模型所需的训练数据、字典'''
     corpus = get_corpus_by_aid.get_author_corpus(aid)
     phrase_list = phrase_extraction.get_noun_phrase(corpus, 3, 3)
     corpus = phrase_extraction.replace_phrase(corpus, phrase_list)
@@ -104,44 +101,11 @@ def find_topic_number(aid, corpus):
     num_cos_dict = sorted(num_cos_dict.items(), key=lambda x: x[1],reverse=True)
     return num_cos_dict[0][0]
 
-def get_author_at_topics(aid, name, topic_number, corpus):
-    '''获取指定作者的AT模型'''
-    train_data = corpus[0]
-    my_dict = corpus[1]
-    doc_author = generate_doc2author(aid)
 
-    my_model = train_at_model(train_data, my_dict, topic_number, doc_author)
-    model_name = 'D:/TopicInterestGraph/data/at/model/aid-%d.gensim' % aid
-    my_model.save(model_name)
-
-    topic_distribute = my_model.get_author_topics(name)
-    topics = []
-    for topic in topic_distribute:
-        topics.append(my_model.show_topic(topic[0], topn=10))
-    author_dict = OrderedDict()
-    author_dict['aid'] = aid
-    author_dict['name'] = name
-    author_dict['topic distribute'] = topic_distribute
-    author_dict['topics list'] = topics
-    return author_dict
-
-
-def get_aid_list():
-    '''获取实验所需的aid列表'''
-    fo = open('D:/TopicInterestGraph/data/lda/author_topic_distribution.json', 'r', encoding='utf-8')
-    aid_list = []
-    for line in fo.readlines():
-        temp = json.loads(line)
-        aid_list.append(list(temp.keys())[0])
-    fo.close()
-    return aid_list
-
-
-   
 
 
 def get_author_lda_topics(aid, name, topic_number, corpus):
-    '''获得指定作者的LDA主题模型下的主题分布'''
+    '''获取指定作者的确定主题数之后的lda模型 并保存'''
     train_data = corpus[0]
     my_dict = corpus[1]
 
@@ -169,12 +133,12 @@ def lda_result():
     for aid in aid_list:
         name = aid_name[aid]
         corpus = get_corpus(int(aid))
-        topic_number = find_topic_number(int(aid), corpus)
+        topic_number = find_topic_number(int(aid), corpus)  #确定主题数
         if topic_number == False: continue
         print(aid)
         print(name + ' has ' + str(topic_number) + ' topics.')
         author_dict = get_author_lda_topics(
-            int(aid), name, topic_number, corpus)
+            int(aid), name, topic_number, corpus)   #训练LDA模型 并保存
         author_json = json.dumps(author_dict, ensure_ascii=False)
         fw.write('%s\n' % author_json)
     fw.close()
