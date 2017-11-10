@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-@author: ake
-@time: 2017/3/21
-主要训练：
-    个体学者研究兴趣+AT
-    个体学者研究兴趣+LDA
-"""
+
 import json
 from collections import OrderedDict
 from topic import get_corpus_by_aid, phrase_extraction
@@ -76,43 +70,6 @@ def train_at_model(my_corpus, my_dict, topic_num, doc_author):
         passes=5)
     return at
 
-"""
-def find_topic_number(aid, corpus):
-    '''为指定aid训练的个人AT模型寻找合适的主题个数（仅根据余弦相似度选择）'''
-    topic_number = range(2, 20)
-    sim_list = []
-    # perplexity_list = []
-    train_data = corpus[0]
-    # test_data = corpus[0][0:5]
-    my_dict = corpus[1]
-    doc_author = generate_doc2author(aid)
-    for num in topic_number:
-        try:
-            my_model = train_at_model(train_data, my_dict, num, doc_author)
-            topics = my_model.show_topics(num, len(my_dict), formatted=False)
-            topic_sim = lda_topic.average_sim(topics)
-            sim_list.append(topic_sim)
-        except:
-            return False
-        # perplexity = my_model.log_perplexity(test_data, [0, 1, 2, 3, 4])
-        # perplexity_list.append(perplexity)
-
-        # 使用困惑度除以预先相似度作者发现主题个数的指标
-        # lda_topic.plot_topic_number_trend(topic_number, sim_list, 'Topic number',
-        #                                   'Consine similarity')
-        # lda_topic.plot_topic_number_trend(topic_number, perplexity_list,
-        #                                   'Topic number', 'Perplexity')
-        # per_cos_list = list(
-        #     map(lambda x: x[0] / x[1], zip(perplexity_list, sim_list)))
-
-    num_cos_dict = {}
-    i = 0
-    for num in topic_number:
-        num_cos_dict[num] = sim_list[i]
-        i += 1
-    num_cos_dict = sorted(num_cos_dict.items(), key=lambda x: x[1])
-    return num_cos_dict[0][0]
-"""
 def average_jsd(topics_list):
     numbers = len(topics_list)
     all_sim = 0
@@ -135,18 +92,15 @@ def average_jsd(topics_list):
     return all_sim / (numbers * (numbers - 1) / 2)
 
 def find_topic_number(aid, corpus):
-    '''为指定aid训练的个人LDA模型寻找合适的主题个数（仅根据余弦相似度选择）'''
+    '''为指定aid训练的个人LDA模型寻找合适的主题个数（仅根据平均js散度选择）'''
     topic_number = range(2, 20)
     sim_list = []
-    # perplexity_list = []
     train_data = corpus[0]
-    # test_data = corpus[0][0:5]
     my_dict = corpus[1]
     for num in topic_number:
         try:
             my_model = lda_topic.lda_model(train_data, num,my_dict)
             topics = my_model.show_topics(num, len(my_dict), formatted=False)
-            #topic_sim = lda_topic.average_sim(topics)
             topic_sim=average_jsd(topics)
             sim_list.append(topic_sim)
         except:
@@ -156,7 +110,8 @@ def find_topic_number(aid, corpus):
     for num in topic_number:
         num_cos_dict[num] = sim_list[i]
         i += 1
-    num_cos_dict = sorted(num_cos_dict.items(), key=lambda x: x[1])
+    #num_cos_dict = sorted(num_cos_dict.items(), key=lambda x: x[1])
+    num_cos_dict = sorted(num_cos_dict.items(), key=lambda x: x[1],reverse=True)
     return num_cos_dict[0][0]
 
 def get_author_at_topics(aid, name, topic_number, corpus):
@@ -234,43 +189,12 @@ def get_author_lda_topics(aid, name, topic_number, corpus):
     author_dict['number_of_topic'] = topic_number
     author_dict['topics'] = topics
     return author_dict
-"""
 
-def get_author_lda_topics(aid, name, topic_number):
-    model_name = 'D:/TopicInterestGraph/data/lda_person/model/aid-%d.gensim' % aid
-    my_model=models.LdaModel.load(model_name)
-    #topic_list = my_model.show_topics(topic_number, 10, formatted=False)
-    topic_list = my_model.show_topics(topic_number, my_model.num_terms, formatted=False)
-    topics=[]
-    for topic in topic_list:
-        topics.append([topic[0],topic[1]])
-        
-    fo=open('D:/TopicInterestGraph/data/author_unit_topic_paper.json', 'r',encoding='utf-8')
-    for line in fo.readlines():
-        temp = json.loads(line)
-        if temp['aid']==int(aid):
-            unit=temp['unit']
-            number_of_paper=temp['number_of_paper']
-            papers=temp['papers']
-            break
-    fo.close()
-    
-    author_dict = OrderedDict()
-    author_dict['aid'] = aid
-    author_dict['name'] = name
-    author_dict['unit']=unit
-    author_dict['number_of_paper']=number_of_paper
-    author_dict['papers']=papers
-    author_dict['number_of_topic'] = topic_number
-    author_dict['topics'] = topics
-    return author_dict
-"""
 
 def lda_result():
     '''获取每位作者的LDA模型主题分布结果'''
     aid_list = get_aid_list()
     aid_name = author_sort.get_aid_name(aid_list)
-    #fw = open('D:/TopicInterestGraph/data/lda_person/author_topics.json', 'a', encoding='utf-8')
     fw = open('D:/TopicInterestGraph/data/lda_person/model_lda/author_topics_distribution.json', 'a', encoding='utf-8')
     for aid in aid_list:
         name = aid_name[aid]
@@ -284,36 +208,7 @@ def lda_result():
         author_json = json.dumps(author_dict, ensure_ascii=False)
         fw.write('%s\n' % author_json)
     fw.close()
-"""
-def lda_result():
-    '''获取每位作者的LDA模型主题分布结果'''
-    aid_list = get_aid_list()
-    aid_name = author_sort.get_aid_name(aid_list)
-    #fw = open('D:/TopicInterestGraph/data/lda_person/author_topics.json', 'a', encoding='utf-8')
-    fw = open('D:/TopicInterestGraph/data/lda_person/author_topics_allitems.json', 'a', encoding='utf-8')
-    for aid in aid_list:
-        name = aid_name[aid]
-        #corpus = get_corpus(int(aid))
-        #topic_number = find_topic_number(int(aid), corpus)
-        topic_number=0
-        fo=open('D:/TopicInterestGraph/data/lda_person/author_topics_new.json', 'r',encoding='utf-8')
-        for line in fo.readlines():
-            temp = json.loads(line)
-            if temp['aid']==int(aid):
-                topic_number=temp['number_of_topic']
-                break
-        fo.close()
-    
-        if topic_number == 0: continue
-        print(aid)
-        print(name + ' has ' + str(topic_number) + ' topics.')
-        #print(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())))
-        author_dict = get_author_lda_topics(
-            int(aid), name, topic_number)
-        author_json = json.dumps(author_dict, ensure_ascii=False)
-        fw.write('%s\n' % author_json)
-    fw.close()
-"""    
+
     
 def main():
     pass
