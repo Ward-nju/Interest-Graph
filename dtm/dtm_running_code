@@ -1,0 +1,47 @@
+./main \
+  --ntopics=80 \
+  --mode=fit \
+  --rng_seed=0 \
+  --initialize_lda=true \
+  --corpus_prefix=example/foo \
+  --outname=example/test \
+  --top_chain_var=0.005 \
+  --alpha=0.01 \
+  --lda_sequence_min_iter=6 \
+  --lda_sequence_max_iter=10 \
+  --lda_max_em_iter=10
+
+
+./main \
+    --mode=fit \
+    --rng_seed=0 \
+    --model=fixed \
+    --initialize_lda=true \
+    --corpus_prefix=example/new \
+    --outname=example/output \
+    --time_resolution=1 \
+    --top_obs_var=0.5 \
+    --top_chain_var=0.005 \
+    --sigma_d=0.0001 \
+    --sigma_l=0.0001 \
+    --alpha=0.83 \
+    --lda_sequence_min_iter=20 \
+    --lda_sequence_max_iter=70 \
+    --save_time=-1 \
+    --ntopics=60 \
+    --lda_max_em_iter=70
+
+
+
+./main \
+  --ntopics=60 \
+  --mode=fit \
+  --rng_seed=0 \
+  --initialize_lda=true \
+  --corpus_prefix=example/new \
+  --outname=example/result \
+  --top_chain_var=0.005 \
+  --alpha=0.83 \
+  --lda_sequence_min_iter=20 \
+  --lda_sequence_max_iter=70 \
+  --lda_max_em_iter=70
