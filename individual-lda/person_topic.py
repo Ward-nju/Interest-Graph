@@ -58,17 +58,7 @@ def get_corpus(aid):
     return corpus_tfidf_train, dict_train
 
 
-def train_at_model(my_corpus, my_dict, topic_num, doc_author):
-    '''训练AT模型'''
-    at = models.AuthorTopicModel(
-        my_corpus,
-        num_topics=topic_num,
-        doc2author=doc_author,
-        id2word=my_dict,
-        chunksize=5,
-        update_every=1,
-        passes=5)
-    return at
+
 
 def average_jsd(topics_list):
     numbers = len(topics_list)
@@ -147,26 +137,7 @@ def get_aid_list():
     return aid_list
 
 
-def at_result():
-    '''获得每个作者的AT模型中的主题分布'''
-    aid_list = get_aid_list()
-    aid_name = author_sort.get_aid_name(aid_list)
-    fo = open('D:/TopicInterestGraph/data/at/author_topics.json', 'a', encoding='utf-8')
-    for aid in aid_list:
-        name = aid_name[aid]
-        corpus = get_corpus(int(aid))
-        topic_number = find_topic_number(int(aid), corpus)
-        if topic_number == False: continue
-        print(name + 'has' + str(topic_number) + 'topics.')
-
-        author_dict = get_author_at_topics(
-            int(aid), name, topic_number, corpus)
-        author_json = json.dumps(author_dict, ensure_ascii=False)
-        fo.write('%s\n' % author_json)
-        print(aid)
-    fo.close()
-
-    
+   
 
 
 def get_author_lda_topics(aid, name, topic_number, corpus):
@@ -182,7 +153,6 @@ def get_author_lda_topics(aid, name, topic_number, corpus):
     topics = []
     for topic in topic_list:
         topics.append([topic[0],topic[1]])
-        #topics.append((topic[0], '、'.join([word[0] for word in topic[1]])))
     author_dict = OrderedDict()
     author_dict['aid'] = aid
     author_dict['name'] = name
